@@ -1,0 +1,10 @@
+## Delete  aws key-pair
+---
+- hosts: localhost
+  tasks:
+   - name: deleting aws key-pair      
+     ec2_key:
+      name: "ENTER THE KEYNAME TO BE DELETED"
+      region: ap-south-1
+      state: absent
+...

@@ -1,0 +1,15 @@
+## Creating aws key-pair
+---
+- hosts: localhost
+  tasks:
+   - name: creating aws key-pair      
+     ec2_key:
+      name: demokey1
+      region: ap-south-1
+      state: present
+     register: prikey
+
+   - name: get the private key
+     debug:
+       var: prikey
+...

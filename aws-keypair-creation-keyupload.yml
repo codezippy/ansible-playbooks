@@ -1,0 +1,11 @@
+## Creating aws key-pair by uploading the locally created ssh pub key
+---
+- hosts: localhost
+  tasks:
+   - name: creating aws key-pair      
+     ec2_key:
+      name: 'ENTER THE KEY-NAME'
+      region: ap-south-1
+      key_material: 'PASTE THE LOCALLY CREATED SSH PUBLIC KEY HERE'
+      state: present
+...
