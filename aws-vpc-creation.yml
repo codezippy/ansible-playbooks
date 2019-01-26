@@ -1,0 +1,79 @@
+## AWS VPC Creation - Creating a vpc includes creation of VPC, Subnets, RouteTable, NAT or NAT GATEWAY
+---
+- hosts: localhost
+  tasks:
+    - name: create a VPC with couple of tags
+      ec2_vpc_net:
+        name: demo-ansible-vpc
+        cidr_block: 10.10.0.0/16
+        region: ap-south-1
+        dns_hostnames: yes
+        dns_support: yes
+        tags:
+          Name: demo-ansible-vpc
+          Env: ansible-demo
+          Projects: ansible
+        state: present
+      register: vpc
+
+    - name: creating a public subnet
+      ec2_vpc_subnet:
+        vpc_id: "{{ vpc.vpc.id }}"
+        az: ap-south-1a
+        cidr: 10.10.0.0/24
+        tags:
+          Name: demo-ansible-vpc-publicsubnet1
+        state: present
+      register: publicsubnet1   
+
+    - name: Creating a private subnet
+      ec2_vpc_subnet:
+        vpc_id: "{{ vpc.vpc.id }}"
+        az: ap-south-1b
+        cidr: 10.10.1.0/24
+        tags:
+          Name: demo-ansible-vpc-privatesubnet1
+        state: present
+      register: privatesubnet1
+
+    - name: creating internet-gateway
+      ec2_vpc_igw:
+        region: ap-south-1
+        vpc_id: "{{ vpc.vpc.id }}"
+        state: present
+        tags:
+         Name: demo-ansible-vpc-igw
+      register: igw
+
+    - name: get details
+      debug:
+        var: igw.gateway_id
+
+    - name: creating nat-gateway
+      ec2_vpc_nat_gateway:
+        region: ap-south-1
+        subnet_id: "{{ publicsubnet1.subnet.id }}"
+        state: present
+      register: natgateway
+
+    - name: Creating a route-table for PublicSubnets
+      ec2_vpc_route_table:
+        vpc_id: "{{ vpc.vpc.id }}"
+        subnets:
+         - "{{ publicsubnet1.subnet.id }}"
+        routes:
+           - dest: 0.0.0.0/0
+             gateway_id: "{{ igw.gateway_id }}"
+        tags:
+         Name: demo-ansible-route-publicsubnet1
+        state: present
+
+    - name: Creating a route-table for PrivateSubnets
+      ec2_vpc_route_table:
+        vpc_id: "{{ vpc.vpc.id }}"
+        subnets:
+          - "{{ privatesubnet1.subnet.id }}"
+        routes:
+          - dest: 0.0.0.0/0
+            gateway_id: "{{ natgateway.nat_gateway_id }}"
+...
