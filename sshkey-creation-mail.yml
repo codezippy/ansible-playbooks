@@ -1,0 +1,32 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars_prompt:
+    - name: ssh_keyname
+      prompt: "enter the name of sshkey"
+      private: no
+
+  tasks:
+    - name: creating ssh-key pair for aws
+      ec2_key:
+         name: "{{ ssh_keyname }}"
+         region: us-east-1
+         state: present
+      register: awskey
+
+    - name: save the ssh private key
+      copy:
+       content: "{{ awskey.key.private_key }}"
+       dest: /root/{{ ssh_keyname }}.pem
+
+    - name: sending the sshkey to mail-id
+      mail:
+        host: smtp.gmail.com
+        port: 587
+        username: ### Sender Mail-ID username ###
+        password: ### Sender Mail-ID Password ###
+        to: ### Receiver Mail-ID ###
+        subject: sshkey for {{ ssh_keyname }}
+        attach: /root/{{ ssh_keyname }}.pem
+        secure: starttls

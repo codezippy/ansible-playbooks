@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+      - name: creating ssh-key pair for aws
+        ec2_key:
+            name: ansible-sshkey-demo
+            region: us-east-1
+            state: present
+        register: awskey
+
+      - name: save the ssh private key
+        copy:
+          content: "{{ awskey.key.private_key }}"
+          dest: /root/ansible-sshkey-demo.pem
